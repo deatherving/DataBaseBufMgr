@@ -6,7 +6,6 @@ import java.util.LinkedList;
 
 public class HashTable {
     private LinkedList<content> directory[];
-    private int size;
 	
 	//Construct Hash Table
 	public HashTable(int tablesize) {
@@ -40,12 +39,7 @@ public class HashTable {
 		}
 		else {
 			directory[hashedkey].add(new content(key, value));
-			size++;
 		}
-	}
-	
-	public int getsize() {
-		return size;
 	}
 	
 	public int getKey(int key) {
