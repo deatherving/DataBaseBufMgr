@@ -124,16 +124,13 @@ public class BufMgr {
 						maxWeight = maxTemp;
 					}
 				}
-				if ((discriptors[loc] != null) && discriptors[loc].getDirtyPage()) {
+				if (discriptors[loc].getDirtyPage()) {
                     flushPage(discriptors[loc].getPageId());
-                    removeLirs(discriptors[loc].getPageId());
-                    directory.remove(discriptors[loc].getPageId().pid);
-                    createLirs(pageno);
-               
+                
 				}
-				
-				
-				
+				removeLirs(discriptors[loc].getPageId());
+                directory.remove(discriptors[loc].getPageId().pid);
+				createLirs(pageno);
 			}
 			discriptors[loc].setDirty(false);
 			discriptors[loc].setPage(pageno.pid);
@@ -162,16 +159,65 @@ public class BufMgr {
 		}
 	}
 
-	public PageId newPage(Page firstpage, int howmany) {
-		PageId pid = new PageId();		
-
-		return pid;
+public boolean isFull() {
+        return (emptyFrame.size() + flushFrame.size() == 0);
+	}
+	
+	public PageId newPage(Page firstpage, int howmany) throws DiskMgrException,
+	FreePageException, BufferPoolExceededException,
+    PagePinnedException, InvalidPageNumberException, FileIOException,
+    HashEntryNotFoundException, IOException, InvalidRunSizeException {
+		PageId pid = new PageId();	
+		if(isFull())
+			return null;
+		try {
+            // Call DB object to allocate a run of new pages
+            SystemDefs.JavabaseDB.allocate_page(id, howmany);
+		} catch (Exception e) {
+            throw new DiskMgrException(e, "DB.java: newPage() failed");
+		}
+		
+		pinPage(pid, firstpage, false);
+        return pid;
+		
 	}
 
 
-	public void freePage(PageId globalPageId) throws PagePinnedException {
+	public void freePage(PageId globalPageId) throws PagePinnedException,
+    InvalidRunSizeException, InvalidPageNumberException,
+    FileIOException, DiskMgrException, IOException {
+		if(directory.hasKey(globalPageId.pid)){
+			int index = 0;
+			try{
+				index = directory.getKey(globalPageId.pid);
+				if(discriptors[index].getPinCount() == 1){
+					unpinPage(discriptors[index].getPageId(),discriptors[index].getDirtyPage());
+				}
+				if(discriptors[index].getDirtyPage())
+                        flushPage(globalPageId);
+				directory.remove(globalPageId.pid);
+				buffPool[index] = null;
+				discriptors[index] = null;
+				if(discriptors[index].getPinCount() == 0){
+					flushFrame.remove(index);
+				}
+				emptyFrame.add(index);
+				SystemDefs.JavabaseDB.deallocate_page(new PageId(globalPageId.pid));
+				
+			}catch(Exception e){
+				 throw new PagePinnedException(null, "BUFMGR:FAIL_PAGE_FREE");
+			}
+		}
+		else
+			SystemDefs.JavabaseDB.deallocate_page(new PageId(globalPageId.pid));
+	}
+
+
+	public void flushPage(PageId pageid) {
+
 
 	}
+
 
 
 	public void flushPage(PageId pageid) {
