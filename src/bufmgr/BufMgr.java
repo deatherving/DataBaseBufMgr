@@ -19,7 +19,7 @@ public class BufMgr {
 	private String replacementPolicy;
 	private Queue<Integer> emptyFrame;
 	private Queue<Integer> flushFrame;
-	private HashTable<Integer,Integer> directory;
+	private HashTable directory;
 	//Lirs contains a vector value, value[0] = RD, value[1] = R
 	private Hashtable<Integer,Vector<Integer>> Lirs;
 
