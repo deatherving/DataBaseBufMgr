@@ -71,7 +71,7 @@ public class HashTable {
 	public boolean remove(int key) {
 		int hashedkey = hash(key);
 		if(directory[hashedkey] != null) {
-			return setKeyValue(hashedkey, key, 0);
+			return setKeyValue(hashedkey, key, -1);
 		}
 		return false;
 	}
