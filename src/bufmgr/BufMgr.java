@@ -1,14 +1,41 @@
 package bufmgr;
 
+import java.util.Queue;
+import java.util.Vector;
+import java.util.Hashtable;
+import java.util.Set;
+import java.util.LinkedList;
 
-import global.Page;
-import global.PageId;
+import global.*;
+import diskmgr.*;
+
+import java.io.IOException;
 
 public class BufMgr {
+	private Page[] buffPool;
+	private discriptor[] discriptors;
+	private int numBuff;
+	private int lookAheadSize;
+	private String replacementPolicy;
+	private Queue<Integer> emptyFrame;
+	private Queue<Integer> flushFrame;
+	private HashTable<Integer,Integer> directory;
+	//Lirs contains a vector value, value[0] = RD, value[1] = R
+	private Hashtable<Integer,Vector<Integer>> Lirs;
 
-
-	public BufMgr(int numbufs, int lookAheadSize, String replacementPolicy) {
-
+	public BufMgr(int numbufs, int lookAheadSize, String replacementPolicy){
+		this.lookAheadSize = lookAheadSize;
+		numBuff = numbufs;
+		buffPool = new Page[numbufs];
+		this.replacementPolicy = replacementPolicy;
+		discriptors = new discriptor[numbufs];
+		emptyFrame = new LinkedList<Integer>();
+		flushFrame = new LinkedList<Integer>();
+		directory = new HashTable<Integer,Integer>();
+		Lirs = new Hashtable<Integer,Vector<Integer>>();
+		for(int i = 0;i < numbufs;i++){
+			emptyFrame.add(i);
+		}
 	}
 
 	public void pinPage(PageId pageno, Page page, boolean emptyPage) throws BufferPoolExceededException{
