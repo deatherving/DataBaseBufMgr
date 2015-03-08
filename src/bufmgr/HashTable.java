@@ -5,7 +5,7 @@ import java.util.LinkedList;
 
 
 public class HashTable {
-    	private LinkedList<content> directory[];
+    private LinkedList<content> directory[];
 	
 	//Construct Hash Table
 	public HashTable(int tablesize) {
@@ -24,7 +24,6 @@ public class HashTable {
 			directory[i] = new LinkedList<content>();
 		}
 		
-		size = primenum.intValue();
 	}
 	
 	public boolean hasKey(int key) {
@@ -41,6 +40,7 @@ public class HashTable {
 			directory[hashedkey].add(new content(key, value));
 		}
 	}
+	
 	
 	public int getKey(int key) {
 		int hashedkey = hash(key);
@@ -68,8 +68,54 @@ public class HashTable {
 		return false;
 	}
 	
+	public boolean remove(int key) {
+		int hashedkey = hash(key);
+		if(directory[hashedkey] != null) {
+			return setKeyValue(hashedkey, key, 0);
+		}
+		return false;
+	}
+	
 	private int hash(int key) {
 		return (10 * key + 5) % directory.length;
+	}
+	
+	public static void main(String[] args) {
+		HashTable ht=new HashTable(512);
+		ht.setKey(50, 10);
+		ht.setKey(51, 20);
+		ht.setKey(50, 50);
+	
+		ht.setKey(53, 10);
+		ht.setKey(512, 20);
+		ht.setKey(5123123, 50);
+		
+		ht.setKey(21, 20);
+		ht.setKey(20, 50);
+		ht.setKey(23, 10);
+		ht.setKey(5212, 20);
+		ht.setKey(2123123, 50);
+		ht.setKey(121, 20);
+		ht.setKey(30, 50);
+		ht.setKey(13, 10);
+		ht.setKey(1212, 20);
+		ht.setKey(323123, 50);
+		
+		ht.setKey(1211, 20);
+		ht.setKey(302, 50);
+		ht.setKey(133, 10);
+		ht.setKey(12132, 20);
+		ht.setKey(3231523, 50);
+		ht.setKey(323152, 50);
+		System.out.println(ht.getKey(133));
+		ht.remove(133);
+		System.out.println(ht.getKey(133));
+		ht.setKey(32315, 50);
+		ht.setKey(32315, 30);
+		System.out.println(ht);
+		System.out.println(ht.getKey(32315));
+		//System.out.println(ht);
+	
 	}
 	
 }
@@ -83,3 +129,4 @@ class content {
 		value = v;	
 	}
 }
+
