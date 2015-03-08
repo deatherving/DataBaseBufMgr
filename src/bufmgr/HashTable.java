@@ -5,7 +5,7 @@ import java.util.LinkedList;
 
 
 public class HashTable {
-    private LinkedList<content> directory[];
+    	private LinkedList<content> directory[];
 	
 	//Construct Hash Table
 	public HashTable(int tablesize) {
