@@ -1,10 +1,12 @@
+package bufmgr;
+
 import java.util.Queue;
 import java.util.Vector;
 import java.util.Hashtable;
 import java.util.Set;
 import java.util.LinkedList;
 
-
+import chainexception.*;
 import global.*;
 import diskmgr.*;
 
@@ -76,7 +78,8 @@ public class BufMgr {
 		Lirs.remove(pageno.pid);
 	}
 	
-	public void pinPage(PageId pageno, Page page, boolean emptyPage) throws BufferPoolExceededException{
+	public void pinPage(PageId pageno, Page page, boolean emptyPage) 
+			throws HashEntryNotFoundException, BufferPoolExceededException, InvalidPageNumberException, FileIOException, IOException, DiskMgrException{
 		//if page is already in buffer pool, we just increase the pin count. In addition
 		//we will remove this page from replacement candidates
 		if(directory.hasKey(pageno.pid)){
@@ -98,7 +101,7 @@ public class BufMgr {
 		else{
 			Page weGet = new Page();
 			int loc = -1;
-            SystemDefs.JavabaseDB.read_page(new PageId(pageno.pid),page);
+            Minibase.DiskManager.read_page(new PageId(pageno.pid),page);
 			if(!emptyFrame.isEmpty()){
 				loc = emptyFrame.poll();
 				page.setpage(buffPool[loc].getpage());
@@ -142,7 +145,7 @@ public class BufMgr {
 		}
 	}
 	
-	public void unpinPage(PageId pageno, boolean dirty) throws HashEntryNotFoundException {
+	public void unpinPage(PageId pageno, boolean dirty) throws HashEntryNotFoundException, PageUnpinnedException {
 		if(directory.hasKey(pageno.pid)) {
 			int index = directory.getKey(pageno.pid);
 			
@@ -159,7 +162,7 @@ public class BufMgr {
 		}
 	}
 
-public boolean isFull() {
+	public boolean isFull() {
         return (emptyFrame.size() + flushFrame.size() == 0);
 	}
 	
@@ -172,7 +175,7 @@ public boolean isFull() {
 			return null;
 		try {
             // Call DB object to allocate a run of new pages
-            SystemDefs.JavabaseDB.allocate_page(id, howmany);
+            Minibase.DiskManager.allocate_page(pid, howmany);
 		} catch (Exception e) {
             throw new DiskMgrException(e, "DB.java: newPage() failed");
 		}
@@ -183,7 +186,7 @@ public boolean isFull() {
 	}
 
 
-	public void freePage(PageId globalPageId) throws PagePinnedException,
+	public void freePage(PageId globalPageId) throws ChainException, PagePinnedException,
     InvalidRunSizeException, InvalidPageNumberException,
     FileIOException, DiskMgrException, IOException {
 		if(directory.hasKey(globalPageId.pid)){
@@ -202,25 +205,18 @@ public boolean isFull() {
 					flushFrame.remove(index);
 				}
 				emptyFrame.add(index);
-				SystemDefs.JavabaseDB.deallocate_page(new PageId(globalPageId.pid));
+				Minibase.DiskManager.deallocate_page(new PageId(globalPageId.pid));
 				
 			}catch(Exception e){
 				 throw new PagePinnedException(null, "BUFMGR:FAIL_PAGE_FREE");
 			}
 		}
 		else
-			SystemDefs.JavabaseDB.deallocate_page(new PageId(globalPageId.pid));
+			Minibase.DiskManager.deallocate_page(new PageId(globalPageId.pid));
 	}
 
 
-	public void flushPage(PageId pageid) {
-
-
-	}
-
-
-
-	public void flushPage(PageId pageid) {
+	public void flushPage(PageId pageid) throws DiskMgrException, HashEntryNotFoundException {
 		Page fpage = null;
 		int index = getFrameIndex(pageid);
 		if(buffPool[index] != null) {
@@ -241,7 +237,7 @@ public boolean isFull() {
 	}
 
 
-	public void flushAllPages() {
+	public void flushAllPages() throws DiskMgrException, HashEntryNotFoundException {
 		int i = 0;
 		
 		for(i = 0; i < numBuff; i++) {
